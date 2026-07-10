@@ -73,10 +73,29 @@ Unlike the main n8n image, you CANNOT use file-based configuration for secrets i
 | :------- | :---- | :------- | :---------- |
 | `NODE_FUNCTION_ALLOW_BUILTIN` | String | - | Permit users to import specific built-in modules in the Code node. Use * to allow all. n8n disables importing modules by default. In external mode, set this in the [runners config file](../../set-up-task-runners.md#configuring-launcher-in-runners-container-in-external-mode) (`/etc/n8n-task-runners.json`) as an `env-override`, not as a container environment variable. |
 | `NODE_FUNCTION_ALLOW_EXTERNAL` | String | - | Permit users to import specific external modules (from `n8n/node_modules`) in the Code node. n8n disables importing modules by default. In external mode, set this in the [runners config file](../../set-up-task-runners.md#configuring-launcher-in-runners-container-in-external-mode) (`/etc/n8n-task-runners.json`) as an `env-override`, not as a container environment variable. |
-| `N8N_RUNNERS_ALLOW_PROTOTYPE_MUTATION` | Boolean | `false` | Whether to allow prototype mutation for external libraries. Set to `true` to allow modules that rely on runtime prototype mutation (for example, [`puppeteer`](https://pptr.dev/)) at the cost of relaxing security. | 
+| `N8N_RUNNERS_INSECURE_MODE` | Boolean | `false` | When set to true, this disables security restrictions within the JavaScript sandbox. This is required for libraries like [`puppeteer`](https://pptr.dev/) that need to modify global objects (e.g., Error.prototype) to function. | 
 | `GENERIC_TIMEZONE` | * | `America/New_York` | The [same default timezone as configured for the n8n instance](timezone-and-localization.md). |
 | `NODE_OPTIONS` | String | - | [Options](https://nodejs.org/api/cli.html#node_optionsoptions) for Node.js. |
 | `N8N_RUNNERS_MAX_OLD_SPACE_SIZE` | String |  | The `--max-old-space-size` option to use for a task runner (in MB). By default, Node.js will set this based on available memory. |
+
+/// warning | Compatibility with Puppeteer/Playwright
+If you encounter `TypeError: Cannot assign to read only property 'name' of object 'Error'`:
+Set `N8N_RUNNERS_INSECURE_MODE=true` in the `env-overrides` section of `/etc/n8n-task-runners.json`
+```json
+    {
+      "task-runners": [
+        {
+          "runner-type": "javascript",
+          "env-overrides": {
+            "NODE_FUNCTION_ALLOW_EXTERNAL": "puppeteer-core",
+            "N8N_RUNNERS_INSECURE_MODE": "true"
+          }
+        }
+      ]
+    }
+```
+Note: `N8N_RUNNERS_INSECURE_MODE` replaces the deprecated `N8N_RUNNERS_ALLOW_PROTOTYPE_MUTATION` flag.
+///
 
 ## Task runner environment variables (Python) <a href="#task-runner-environment-variables-python" id="task-runner-environment-variables-python"></a>
 
